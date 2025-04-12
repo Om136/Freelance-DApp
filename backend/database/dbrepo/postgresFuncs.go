@@ -251,3 +251,89 @@ func (m *PostgresRepo) ApplyForJobById(jobId, userId, filename string, cv []byte
 	}
 	return nil
 }
+
+func (m *PostgresRepo) GetAllJobsForFreelancer() ([]SentData.JobData, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	query := `SELECT DISTINCT j.title,j.description,j.budget,j.status,j.created_at,j.status,t.name from jobs as j join tags as t on j.tag=t.id`
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		fmt.Println("Error getting jobs for freelancer:", err)
+		return []SentData.JobData{}, err
+	}
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			fmt.Println("Error closing rows in GetAllJobsForFreelancer:", err)
+		}
+	}(rows)
+	var jobs []SentData.JobData
+	for rows.Next() {
+		var job SentData.JobData
+		err = rows.Scan(&job)
+		if err != nil {
+			fmt.Println("Error scanning jobs for freelancer:", err)
+			return []SentData.JobData{}, err
+		}
+		jobs = append(jobs, job)
+	}
+	return jobs, nil
+}
+
+func (m *PostgresRepo) GetOpenJobByIdForClient(jobId string) (SentData.JobData, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	jobQuery := `
+		SELECT j.id, j.title, j.description, j.budget, j.status, j.created_at, t.name
+		FROM jobs AS j
+		JOIN tags AS t ON j.tag = t.id
+		WHERE j.id = $1 AND j.status = 'Open'
+	`
+
+	var job SentData.JobData
+
+	err := m.DB.QueryRowContext(ctx, jobQuery, jobId).Scan(
+		&job.Title,
+		&job.Description,
+		&job.Budget,
+		&job.Status,
+		&job.CreatedAt,
+		&job.Tag,
+	)
+
+	if err != nil {
+		return SentData.JobData{}, err
+	}
+
+	// Fetch proposals for this job
+	proposalQuery := `
+		SELECT id, freelancer_id, cover_letter, proposed_budget, status, created_at, filename
+		FROM proposals
+		WHERE job_id = $1
+	`
+
+	rows, err := m.DB.QueryContext(ctx, proposalQuery, jobId)
+	if err != nil {
+		return SentData.JobData{}, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var proposal SentData.ProposalData
+		err := rows.Scan(
+			&proposal.FreelancerID,
+			&proposal.CoverLetter,
+			&proposal.ProposedBudget,
+			&proposal.Status,
+			&proposal.CreatedAt,
+			&proposal.Filename,
+		)
+		if err != nil {
+			return SentData.JobData{}, err
+		}
+		job.Proposals = append(job.Proposals, proposal)
+	}
+
+	return job, nil
+}
