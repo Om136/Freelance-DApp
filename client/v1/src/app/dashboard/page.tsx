@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation";
 import {
   ArrowUpDown,
   BriefcaseBusiness,
@@ -142,7 +143,13 @@ const jobs = [
   },
 ]
 
+
+
 export default function DashboardPage() {
+  const router = useRouter();
+  const handleClick = () => {
+    router.push("/profile-set"); // replace with your route
+  };
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
 
@@ -239,9 +246,15 @@ export default function DashboardPage() {
                 />
                 <div className="flex-1 overflow-hidden">
                   <p className="truncate text-sm font-medium">Alex Johnson</p>
-                  <p className="truncate text-xs text-zinc-400">Web3 Developer</p>
+                  <p className="truncate text-xs text-zinc-400">
+                    Web3 Developer
+                  </p>
                 </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-400">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-zinc-400"
+                >
                   <Settings className="h-4 w-4" />
                 </Button>
               </div>
@@ -252,7 +265,10 @@ export default function DashboardPage() {
             <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-zinc-800 bg-[#0F0F13]/80 px-6 backdrop-blur-sm">
               <div className="flex items-center gap-4">
                 <h1 className="text-xl font-semibold">Available Jobs</h1>
-                <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                <Badge
+                  variant="outline"
+                  className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                >
                   {jobs.length} Opportunities
                 </Badge>
               </div>
@@ -268,6 +284,7 @@ export default function DashboardPage() {
                   />
                 </div>
                 <Button
+                  onClick={handleClick}
                   variant="outline"
                   size="sm"
                   className="gap-2 rounded-full border-zinc-800 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
@@ -280,7 +297,11 @@ export default function DashboardPage() {
 
             <main className="p-6">
               <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <Tabs defaultValue="all" className="w-full sm:w-auto" onValueChange={setSelectedCategory}>
+                <Tabs
+                  defaultValue="all"
+                  className="w-full sm:w-auto"
+                  onValueChange={setSelectedCategory}
+                >
                   <TabsList className="bg-zinc-900">
                     <TabsTrigger value="all">All Jobs</TabsTrigger>
                     <TabsTrigger value="Development">Development</TabsTrigger>
@@ -303,7 +324,10 @@ export default function DashboardPage() {
                         <ChevronDown className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800">
+                    <DropdownMenuContent
+                      align="end"
+                      className="bg-zinc-900 border-zinc-800"
+                    >
                       <DropdownMenuItem>Highest Budget</DropdownMenuItem>
                       <DropdownMenuItem>Newest First</DropdownMenuItem>
                       <DropdownMenuItem>Lowest Proposals</DropdownMenuItem>
@@ -335,13 +359,18 @@ export default function DashboardPage() {
                               {job.title}
                             </h3>
                           </div>
-                          <Badge variant="outline" className="border-zinc-700 bg-zinc-800 text-zinc-400">
+                          <Badge
+                            variant="outline"
+                            className="border-zinc-700 bg-zinc-800 text-zinc-400"
+                          >
                             {job.proposals} proposals
                           </Badge>
                         </div>
                       </CardHeader>
                       <CardContent className="pb-4">
-                        <p className="mb-4 line-clamp-2 text-sm text-zinc-400">{job.description}</p>
+                        <p className="mb-4 line-clamp-2 text-sm text-zinc-400">
+                          {job.description}
+                        </p>
                         <div className="mb-4 flex flex-wrap gap-1">
                           {job.skills.map((skill) => (
                             <Badge
@@ -376,7 +405,9 @@ export default function DashboardPage() {
                               className="rounded-full border border-zinc-700"
                             />
                             <div>
-                              <p className="text-xs font-medium">{job.client.name}</p>
+                              <p className="text-xs font-medium">
+                                {job.client.name}
+                              </p>
                               <div className="flex items-center gap-1">
                                 <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                                 <span className="text-xs text-zinc-400">
@@ -401,14 +432,15 @@ export default function DashboardPage() {
                   <BriefcaseBusiness className="mb-4 h-12 w-12 text-zinc-700" />
                   <h3 className="mb-2 text-xl font-medium">No jobs found</h3>
                   <p className="mb-6 text-zinc-400">
-                    Try adjusting your search or filters to find what you're looking for.
+                    Try adjusting your search or filters to find what you're
+                    looking for.
                   </p>
                   <Button
                     variant="outline"
                     className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
                     onClick={() => {
-                      setSearchQuery("")
-                      setSelectedCategory("all")
+                      setSearchQuery("");
+                      setSelectedCategory("all");
                     }}
                   >
                     Clear filters
@@ -420,5 +452,5 @@ export default function DashboardPage() {
         </div>
       </SidebarProvider>
     </div>
-  )
+  );
 }
