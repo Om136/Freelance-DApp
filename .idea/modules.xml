@@ -3,8 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Freelance-DApp.iml" filepath="$PROJECT_DIR$/.idea/Freelance-DApp.iml" />
-      <module fileurl="file://$USER_HOME$/Downloads/design_project/.idea/design_project.iml" filepath="$USER_HOME$/Downloads/design_project/.idea/design_project.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../for_go/project2/.idea/project2.iml" filepath="$PROJECT_DIR$/../for_go/project2/.idea/project2.iml" />
     </modules>
   </component>
 </project>

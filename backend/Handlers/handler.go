@@ -119,7 +119,14 @@ func (m *Repository) SignUp(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(user)
 	if user.Role != "client" && user.Role != "freelancer" {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("role is neither client nor freelancer"))
+		_, err := w.Write([]byte("role is neither client nor freelancer"))
+		if err != nil {
+			return
+		}
+		err = json.NewEncoder(w).Encode("role is neither client nor freelancer")
+		if err != nil {
+			return
+		}
 		return
 	}
 	err = m.DB.SignUpUser(user)
@@ -135,4 +142,30 @@ func (m *Repository) SignUp(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error encoding response:", err)
 		return
 	}
+}
+
+func (m *Repository) ConnectWallet(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value("userId").(string)
+	var wallet RecievedData.Wallet
+	err := json.NewDecoder(r.Body).Decode(&wallet)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Println("Error parsing wallet address", err)
+		return
+	}
+	fmt.Println(wallet)
+	err = m.DB.StoreWalletAddress(userId, wallet.Address)
+	if err != nil {
+		fmt.Println("Error adding wallet address to db", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	//_, _ = w.Write([]byte("SUCCESSFUL"))
+	err = json.NewEncoder(w).Encode("Wallet Linked successfully")
+	if err != nil {
+		fmt.Println("Error encoding response:", err)
+		return
+	}
+
 }
