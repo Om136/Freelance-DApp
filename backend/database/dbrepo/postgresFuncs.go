@@ -32,7 +32,7 @@ func (m *PostgresRepo) Login(email, password string) (string, error) {
 	defer cancel()
 
 	var userId, pass string
-	query := `SELECT userId, password FROM users WHERE email = $1`
+	query := `SELECT id, password FROM users WHERE email = $1`
 
 	// Use QueryRowContext for a single row result
 	row := m.DB.QueryRowContext(ctx, query, email)

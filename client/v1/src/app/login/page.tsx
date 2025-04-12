@@ -54,12 +54,14 @@ export default function LoginPage() {
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
-          ...((!isLogin && formData.name) && { name: formData.name }),
+          ...((!isLogin && formData.name) && { username: formData.name }),
           ...((!isLogin && formData.role) && { role: formData.role })
         }),
       });
 
       const data = await response.json();
+      console.log(data);
+
 
       if (!response.ok) {
         throw new Error(data.message || 'Something went wrong');

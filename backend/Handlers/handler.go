@@ -76,9 +76,9 @@ func (m *Repository) Login(w http.ResponseWriter, r *http.Request) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 		},
 	}
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5174")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
-	w.Header().Set("Content-Type", "application/json")
+	//w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	//w.Header().Set("Access-Control-Allow-Credentials", "true")
+	//w.Header().Set("Content-Type", "application/json")
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_KEY")))
 	if err != nil {
@@ -129,5 +129,10 @@ func (m *Repository) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	//_, _ = w.Write([]byte("OTP SENT SUCCESSFULLY"))
+	//_, _ = w.Write([]byte("SUCCESSFUL"))
+	err = json.NewEncoder(w).Encode("User created successfully")
+	if err != nil {
+		fmt.Println("Error encoding response:", err)
+		return
+	}
 }
