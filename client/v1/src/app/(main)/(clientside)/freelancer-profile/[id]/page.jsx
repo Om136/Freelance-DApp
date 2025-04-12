@@ -7,7 +7,7 @@ import {
   Send,
   Star,
   Code2,
-  Mail,
+  // Mail,
   MapPin,
   Calendar,
 } from "lucide-react";
@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+// import { Separator } from "@/components/ui/separator";
 
 // Temporarily using the same freelancer data
 const freelancer = {

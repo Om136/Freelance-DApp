@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowUpDown,
@@ -32,9 +32,32 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
-// Sample freelancer data
-const freelancers = [
+// Define the Freelancer interface
+interface Freelancer {
+  id?: string; // Added as optional since it might not be in the backend data
+  name: string;
+  description: string;
+  experience: string;
+  tags: string[];
+  rating: number;
+  title?: string;
+  hourlyRate?: string;
+  completedJobs?: number;
+  avatar?: string;
+  category?: string;
+  available?: boolean;
+}
+
+interface ClientDashboardProps {
+  freelancersData: Freelancer[];
+  error: string | null;
+}
+
+// Sample freelancer data as fallback
+const sampleFreelancers = [
   {
     id: "freelancer-1",
     name: "Alex Johnson",
@@ -121,10 +144,39 @@ const freelancers = [
   },
 ];
 
-export default function ClientDashboard() {
+export default function ClientDashboard({
+  freelancersData,
+  error,
+}: ClientDashboardProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [freelancers, setFreelancers] = useState<Freelancer[]>([]);
+
+  // Set freelancers data when component mounts or when freelancersData changes
+  useEffect(() => {
+    if (freelancersData && freelancersData.length > 0) {
+      // Map backend data to the format expected by the component
+      const formattedFreelancers = freelancersData.map((freelancer, index) => ({
+        ...freelancer,  
+        id: `freelancer-${index + 1}`, // Generate an ID if not provided
+        title: `${freelancer.experience} Developer`, // Generate a title based on experience
+        hourlyRate: "$50-100", // Default hourly rate
+        avatar: "/placeholder.svg?height=40&width=40", // Default avatar
+        category:
+          freelancer.tags && freelancer.tags.length > 0
+            ? freelancer.tags[0]
+            : "Development", // Use first tag as category
+        available: true, // Default to available
+        completedJobs: Math.floor(Math.random() * 50) + 1, // Random number of completed jobs
+      }));
+
+      setFreelancers(formattedFreelancers);
+    } else {
+      // Use sample data if no data is provided
+      setFreelancers([]);
+    }
+  }, [freelancersData]);
 
   const filteredFreelancers = freelancers.filter((freelancer) => {
     const matchesSearch =
@@ -133,10 +185,17 @@ export default function ClientDashboard() {
 
     const matchesCategory =
       selectedCategory === "all" ||
-      freelancer.category.toLowerCase() === selectedCategory.toLowerCase();
+      (freelancer.category &&
+        freelancer.category.toLowerCase() === selectedCategory.toLowerCase());
 
     return matchesSearch && matchesCategory;
   });
+
+  // Extract unique categories from freelancers for the tabs
+  const categories = [
+    "all",
+    ...new Set(freelancers.map((f) => f.category || "Development")),
+  ];
 
   return (
     <div className="flex flex-col w-full h-full bg-[#0F0F13] text-zinc-200">
@@ -175,6 +234,14 @@ export default function ClientDashboard() {
         </header>
 
         <main className="p-6">
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Tabs
               defaultValue="all"
@@ -182,10 +249,11 @@ export default function ClientDashboard() {
               onValueChange={setSelectedCategory}
             >
               <TabsList className="bg-zinc-900">
-                <TabsTrigger value="all">All Freelancers</TabsTrigger>
-                <TabsTrigger value="Development">Developers</TabsTrigger>
-                <TabsTrigger value="Design">Designers</TabsTrigger>
-                <TabsTrigger value="Security">Security Experts</TabsTrigger>
+                {categories.slice(0, 4).map((category) => (
+                  <TabsTrigger key={category} value={category}>
+                    {category === "all" ? "All Freelancers" : category}
+                  </TabsTrigger>
+                ))}
               </TabsList>
             </Tabs>
 
@@ -223,7 +291,7 @@ export default function ClientDashboard() {
             </div>
           </div>
 
-          <div className="grid gap-3 grid-cols-3">
+          <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {filteredFreelancers.map((freelancer) => (
               <Link
                 href={`/freelancer/${freelancer.id}`}
@@ -235,28 +303,34 @@ export default function ClientDashboard() {
                     <div className="flex items-start justify-between">
                       <div>
                         <Badge className="mb-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20">
-                          {freelancer.category}
+                          {freelancer.category || "Development"}
                         </Badge>
                         <h3 className="text-base font-semibold leading-tight group-hover:text-emerald-400">
-                          {freelancer.title}
+                          {freelancer.title ||
+                            `${freelancer.experience} Developer`}
                         </h3>
                       </div>
                       <Badge
                         variant="outline"
                         className={`border-zinc-700 ${
-                          freelancer.available
+                          freelancer.available !== false
                             ? "bg-emerald-500/10 text-emerald-400"
                             : "bg-zinc-800 text-zinc-400"
                         }`}
                       >
-                        {freelancer.available ? "Available" : "Unavailable"}
+                        {freelancer.available !== false
+                          ? "Available"
+                          : "Unavailable"}
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="pb-1 px-3">
                     <div className="flex items-center gap-2 mb-1">
                       <Image
-                        src={freelancer.avatar}
+                        src={
+                          freelancer.avatar ||
+                          "/placeholder.svg?height=40&width=40"
+                        }
                         alt={freelancer.name}
                         width={32}
                         height={32}
@@ -267,7 +341,7 @@ export default function ClientDashboard() {
                         <div className="flex items-center gap-1">
                           <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                           <span className="text-xs text-zinc-400">
-                            {freelancer.rating} ({freelancer.completedJobs}{" "}
+                            {freelancer.rating} ({freelancer.completedJobs || 0}{" "}
                             jobs)
                           </span>
                         </div>
@@ -277,20 +351,20 @@ export default function ClientDashboard() {
                       {freelancer.description}
                     </p>
                     <div className="mb-1 flex flex-wrap gap-1">
-                      {freelancer.skills.map((skill) => (
+                      {(freelancer.tags || []).map((tag) => (
                         <Badge
-                          key={skill}
+                          key={tag}
                           variant="secondary"
                           className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700 text-xs px-1.5 py-0"
                         >
-                          {skill}
+                          {tag}
                         </Badge>
                       ))}
                     </div>
                     <div className="flex items-center gap-1 text-zinc-400">
                       <Code2 className="h-3 w-3 text-emerald-500" />
                       <span className="text-xs">
-                        {freelancer.hourlyRate}/hr
+                        {freelancer.hourlyRate || "$50-100"}/hr
                       </span>
                     </div>
                   </CardContent>
@@ -305,13 +379,13 @@ export default function ClientDashboard() {
             ))}
           </div>
 
-          {filteredFreelancers.length === 0 && (
+          {filteredFreelancers.length === 0 && !error && (
             <div className="mt-12 flex flex-col items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/50 p-12 text-center">
               <Users className="mb-4 h-12 w-12 text-zinc-700" />
               <h3 className="mb-2 text-xl font-medium">No freelancers found</h3>
               <p className="mb-6 text-zinc-400">
-                Try adjusting your search or filters to find what you&#39;re looking
-                for.
+                Try adjusting your search or filters to find what you&#39;re
+                looking for.
               </p>
               <Button
                 variant="outline"
