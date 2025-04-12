@@ -1,0 +1,3 @@
+
+{"chainId":11155111,"type":"DEPLOYMENT_INITIALIZE"}
+{"artifactId":"FreelanceJobModule#FreelanceJob","constructorArgs":["0x55Db1ecBe7519ec316C884F6B6Cc06B4eB071a85","0xfE99a95220d8d3b3fcfa84FC788665154a99421D",[100,200],"0x8b0b50C2C673Dd5cA20C918345F30f64fB6c159F"],"contractName":"FreelanceJob","dependencies":[],"from":"0x55db1ecbe7519ec316c884f6b6cc06b4eb071a85","futureId":"FreelanceJobModule#FreelanceJob","futureType":"NAMED_ARTIFACT_CONTRACT_DEPLOYMENT","libraries":{},"strategy":"basic","strategyConfig":{},"type":"DEPLOYMENT_EXECUTION_STATE_INITIALIZE","value":{"_kind":"bigint","value":"30000000000000000"}}
