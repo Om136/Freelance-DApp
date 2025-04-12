@@ -38,7 +38,6 @@ export default function LoginPage() {
       return;
     }
 
-    // Validate role selection for signup
     if (!isLogin && !formData.role) {
       alert("Please select a role");
       setLoading(false);
@@ -46,15 +45,35 @@ export default function LoginPage() {
     }
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Handle successful login/signup
-      console.log("Form submitted:", formData);
-      router.push('/dashboard'); // Redirect to dashboard after successful login/signup
+      const endpoint = isLogin ? 'http://localhost:8080/login' : 'http://localhost:8080/signUp';
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          ...((!isLogin && formData.name) && { name: formData.name }),
+          ...((!isLogin && formData.role) && { role: formData.role })
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Something went wrong');
+      }
+
+      // Store the token if provided in the response
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+
+      router.push('/dashboard');
     } catch (error) {
       console.error("Error:", error);
-      alert("Something went wrong. Please try again.");
+      alert(error instanceof Error ? error.message : "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
