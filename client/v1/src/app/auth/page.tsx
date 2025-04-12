@@ -111,7 +111,7 @@ export default function AuthPage() {
       }
 
       // Handle successful signup
-      window.location.href = "/dashboard"
+      window.location.reload()
     } catch (error) {
       console.error('Signup error:', error)
       setEmailError("Failed to create account. Please try again.")
