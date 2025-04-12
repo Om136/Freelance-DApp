@@ -6,9 +6,6 @@ type User struct {
 	Email    string `json:"email"`
 	Role     string `json:"role"`
 }
-
-type WalletVerifyRequest struct {
-	UserID    int    `json:"userId"`
-	Signature string `json:"signature"`
-	Address   string `json:"address"`
+type Wallet struct {
+	Address string `json:"walletAddress"`
 }

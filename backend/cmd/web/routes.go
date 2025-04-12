@@ -21,6 +21,9 @@ func routes() http.Handler {
 	mux.Use(middleware.Recoverer)
 	mux.Post("/login", Handlers.Repo.Login)
 	mux.Post("/signUp", Handlers.Repo.SignUp)
-
+	mux.Route("/user", func(mux chi.Router) {
+		mux.Use(AuthMiddleware)
+		mux.Put("/walletSetup", Handlers.Repo.ConnectWallet)
+	})
 	return mux
 }

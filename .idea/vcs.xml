@@ -2,8 +2,6 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
-    <mapping directory="$USER_HOME$/Downloads/design_project" vcs="Git" />
     <mapping directory="$USER_HOME$/Downloads/design_project/Design_Project_Sem5_Backend" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../for_go/project2" vcs="Git" />
   </component>
 </project>

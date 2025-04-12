@@ -72,3 +72,16 @@ func (m *PostgresRepo) GetRoleFromEmail(email string) (string, error) {
 	}
 	return role, nil
 }
+
+func (m *PostgresRepo) StoreWalletAddress(userId, walletAddress string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	query := `UPDATE users 
+                      SET wallet_address = $1, wallet_verified = true 
+                      WHERE id = $2`
+	_, err := m.DB.ExecContext(ctx, query, walletAddress, userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
