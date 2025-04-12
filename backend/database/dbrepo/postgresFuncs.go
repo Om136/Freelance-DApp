@@ -166,3 +166,88 @@ func (m *PostgresRepo) GetJobsForClientByStatus(userId, status string) ([]SentDa
 	}
 	return jobs, nil
 }
+
+func (m *PostgresRepo) GetFreelanceDetailsForClient() ([]SentData.FreelancerDetails, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	query := `SELECT 
+			u.id,
+			u.username AS name,
+			fp.description,
+			fp.experience_months,
+			COALESCE(AVG(r.rating), 0) AS avg_rating,
+			t.name AS tag_name,
+			fr.hourly_rate
+		FROM users u
+		JOIN freelancer_profiles fp ON u.id = fp.user_id
+		LEFT JOIN freelancer_rates fr ON u.id = fr.user_id
+		LEFT JOIN tags t ON fr.task_id = t.id
+		LEFT JOIN reviews r ON u.id = r.reviewee_id
+		WHERE u.role = 'freelancer'
+		GROUP BY u.id, u.username, fp.description, fp.experience_months, t.name, fr.hourly_rate
+		ORDER BY u.id;
+		`
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		fmt.Println("Error getting freelance details for client:", err)
+		return []SentData.FreelancerDetails{}, err
+	}
+	defer rows.Close()
+
+	freelancerMap := make(map[string]SentData.FreelancerDetails)
+
+	for rows.Next() {
+		var id string
+		var name, description string
+		var experience, hourlyRate int
+		var rating float64
+		var tagName sql.NullString
+
+		if err := rows.Scan(&id, &name, &description, &experience, &rating, &tagName, &hourlyRate); err != nil {
+			return nil, err
+		}
+
+		fd, exists := freelancerMap[id]
+		if !exists {
+			fd = SentData.FreelancerDetails{
+				Name:        name,
+				Description: description,
+				Experience:  experience,
+				Rating:      rating,
+				Tags:        []SentData.Tag{},
+			}
+		}
+
+		if tagName.Valid && hourlyRate != 0 {
+			fd.Tags = append(fd.Tags, SentData.Tag{
+				Name:       tagName.String,
+				HourlyRate: hourlyRate,
+			})
+		}
+
+		freelancerMap[id] = fd
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	var result []SentData.FreelancerDetails
+	for _, v := range freelancerMap {
+		result = append(result, v)
+	}
+
+	return result, nil
+}
+
+func (m *PostgresRepo) ApplyForJobById(jobId, userId, filename string, cv []byte, budget int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	query := `INSERT INTO proposals(job_id,freelancer_id,cover_letter,proposed_budget,status,created_at,filename) VALUES ($1,$2,$3,$4,$5,$6,$7)`
+	_, err := m.DB.ExecContext(ctx, query, jobId, userId, cv, budget, "applied", time.Now(), filename)
+	if err != nil {
+		fmt.Println("Error adding proposal to db:", err)
+		return err
+	}
+	return nil
+}

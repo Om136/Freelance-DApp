@@ -28,12 +28,15 @@ func routes() http.Handler {
 			mux.Use(CheckWalletConnection)
 			mux.With(RoleMiddleware("freelancer")).Post("/dashboard", Handlers.Repo.SendProposal)
 			mux.With(RoleMiddleware("freelancer")).Post("/addDetails", Handlers.Repo.AddFreelancerDetails)
-
+			mux.With(RoleMiddleware("freelancer")).Post("/applyForJob/{id}", Handlers.Repo.ApplyForJob)
 		})
 		mux.Route("/recruiter", func(mux chi.Router) {
 			mux.Use(CheckWalletConnection)
 			mux.With(RoleMiddleware("recruiter")).Post("/addJob", Handlers.Repo.AddJob)
+			//mux.With(RoleMiddleware("recruiter")).Post("/draftJob", Handlers.Repo.DraftJob)
 			mux.With(RoleMiddleware("recruiter")).Get("/jobs/{status}", Handlers.Repo.GetJobByStatusForClient)
+			mux.With(RoleMiddleware("recruiter")).Get("/getAllFreelancers", Handlers.Repo.GetFreelancerDetailsForClient)
+			mux.With(RoleMiddleware("recruiter")).Get("getOpenJobDetails/{id}", Handlers.Repo.GetOpenJobDetailsById)
 		})
 	})
 	return mux

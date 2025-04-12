@@ -10,8 +10,11 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -223,6 +226,18 @@ func (m *Repository) AddJob(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	err = m.DB.CreateJob(job)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		//fmt.Println("Error parsing job data", err)
+		//response=append()
+		err = json.NewEncoder(w).Encode("Error adding job to db")
+		if err != nil {
+			return
+		}
+		fmt.Println("Error adding job to db", err)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode("Job added successfully")
 	if err != nil {
@@ -284,6 +299,98 @@ func (m *Repository) GetJobByStatusForClient(w http.ResponseWriter, r *http.Requ
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		fmt.Println("Error encoding response:", err)
+		return
+	}
+}
+
+//Draft job handler
+//func (m *Repository) DraftJob(w http.ResponseWriter, r *http.Request) {
+//	userId := r.Context().Value("userId").(string)
+//	var job RecievedData.Job
+//	err := json.NewDecoder(r.Body).Decode(&job)
+//	job.ClientId = userId
+//	//response:=make(map[string]interface{})
+//	if err != nil {
+//		w.WriteHeader(http.StatusBadRequest)
+//		fmt.Println("Error parsing job data", err)
+//		//response=append()
+//		err = json.NewEncoder(w).Encode("Error parsing job data")
+//		if err != nil {
+//			return
+//		}
+//		return
+//	}
+//	w.WriteHeader(http.StatusOK)
+//	err = json.NewEncoder(w).Encode("Job added successfully")
+//	if err != nil {
+//		fmt.Println("Error encoding response:", err)
+//		return
+//	}
+//}
+
+func (m *Repository) GetFreelancerDetailsForClient(w http.ResponseWriter, r *http.Request) {
+	//userId := r.Context().Value("userId").(string)
+	freelancers, err := m.DB.GetFreelanceDetailsForClient()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println("Error getting freelancers from database", err)
+		err = json.NewEncoder(w).Encode("Error getting freelancers from database")
+		return
+	}
+	response := make(map[string]interface{})
+	response["freelancers"] = freelancers
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		fmt.Println("Error encoding response:", err)
+		return
+	}
+}
+
+func (m *Repository) GetOpenJobDetailsById(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (m *Repository) ApplyForJob(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value("userId").(string)
+	jobId := chi.URLParam(r, "id")
+	r.ParseMultipartForm(10 << 20)
+
+	file, handler, err := r.FormFile("cv")
+	if err != nil {
+		http.Error(w, "Error retrieving the file", http.StatusBadRequest)
+		return
+	}
+	defer func(file multipart.File) {
+		err := file.Close()
+		if err != nil {
+			fmt.Println("Error closing file")
+			return
+		}
+	}(file)
+
+	// Read PDF content
+	pdfData, err := io.ReadAll(file)
+	if err != nil {
+		http.Error(w, "Error reading file", http.StatusInternalServerError)
+		return
+	}
+	fmt.Println(string(pdfData))
+	budget := r.FormValue("budget")
+	budgetInt, err := strconv.Atoi(budget)
+	if err != nil {
+		fmt.Println("Error converting budget to int")
+		http.Error(w, "Error parsing budget", http.StatusBadRequest)
+		err := json.NewEncoder(w).Encode("Error parsing budget")
+		if err != nil {
+			fmt.Println("Error encoding response:", err)
+			return
+		}
+		return
+	}
+	err = m.DB.ApplyForJobById(jobId, userId, handler.Filename, pdfData, budgetInt)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println("Error adding application to db", err)
 		return
 	}
 }

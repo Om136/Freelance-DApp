@@ -14,3 +14,15 @@ type JobData struct {
 	CreatedAt   string `json:"created_at"`
 	Tag         string `json:"tag"`
 }
+
+type FreelancerDetails struct {
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Experience  int     `json:"experience"`
+	Tags        []Tag   `json:"tags"`
+	Rating      float64 `json:"rating"`
+}
+type Tag struct {
+	Name       string `json:"name"`
+	HourlyRate int    `json:"hourly_rate"`
+}
