@@ -70,6 +70,7 @@ export default function LoginPage() {
       // Store the token if provided in the response
       if (data.token) {
         localStorage.setItem('token', data.token);
+        localStorage.setItem('role', JSON.stringify(data.role));
       }
 
       router.push('/dashboard');

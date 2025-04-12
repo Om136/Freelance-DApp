@@ -18,7 +18,9 @@ export function ConnectWallet() {
       onClick={handleConnect}
       disabled={connecting}
       variant={address ? "outline" : "default"}
-      className="gap-2"
+      className={address 
+        ? "gap-2 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50" 
+        : "gap-2 bg-emerald-600 text-white hover:bg-emerald-700"}
     >
       {connecting ? (
         <>
@@ -31,7 +33,7 @@ export function ConnectWallet() {
             {address.slice(0, 6)}...{address.slice(-4)}
           </span>
           {balance && (
-            <span className="text-xs">
+            <span className="text-xs text-zinc-300">
               ({parseFloat(balance).toFixed(4)} ETH)
             </span>
           )}
