@@ -51,7 +51,7 @@ export default function JobsLayout({
               <TabsTrigger value="overview">Overview</TabsTrigger>
             </Link>
             <Link href="/jobs/postedjobs">
-              <TabsTrigger value="posted">Posted Jobs</TabsTrigger>
+              <TabsTrigger value="posted">All Jobs</TabsTrigger>
             </Link>
             <Link href="/jobs/ongoingjobs">
               <TabsTrigger value="ongoing">Ongoing Jobs</TabsTrigger>
@@ -60,8 +60,6 @@ export default function JobsLayout({
               <TabsTrigger value="completed">Completed Jobs</TabsTrigger>
             </Link>
           </TabsList>
-
-          <TabsContent value="overview">{children}</TabsContent>
           <TabsContent value="posted">{children}</TabsContent>
           <TabsContent value="ongoing">{children}</TabsContent>
           <TabsContent value="completed">{completed}</TabsContent>
