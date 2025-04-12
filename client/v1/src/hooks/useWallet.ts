@@ -1,7 +1,7 @@
 "use client";
 import { useConnectWallet } from "@web3-onboard/react";
 import { BrowserProvider, formatEther } from "ethers";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export const useWallet = () => {
   const [{ wallet, connecting }, connect, disconnect] = useConnectWallet();
@@ -12,71 +12,113 @@ export const useWallet = () => {
   const [chainId, setChainId] = useState<number | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
 
+  const resetStates = useCallback(() => {
+    setEthersProvider(null);
+    setAddress(null);
+    setChainId(null);
+    setBalance(null);
+  }, []);
+
+  useEffect(() => {
+    if (!wallet) {
+      resetStates();
+    }
+  }, [wallet, resetStates]);
+
   useEffect(() => {
     let provider: BrowserProvider | null = null;
+    let mounted = true;
 
     const handleAccountsChanged = async (accounts: string[]) => {
-      setAddress(accounts[0] || null);
-      if (accounts[0] && provider) {
-        const balance = await provider.getBalance(accounts[0]);
-        setBalance(formatEther(balance));
+      if (!mounted) return;
+      const newAddress = accounts[0] || null;
+      setAddress(newAddress);
+      if (newAddress && provider) {
+        try {
+          const balance = await provider.getBalance(newAddress);
+          setBalance(formatEther(balance));
+        } catch (err) {
+          console.error("Error updating balance:", err);
+          setBalance(null);
+        }
       } else {
         setBalance(null);
       }
     };
 
     const handleChainChanged = async (newChainId: string) => {
+      if (!mounted) return;
       setChainId(parseInt(newChainId));
       if (address && provider) {
-        const balance = await provider.getBalance(address);
-        setBalance(formatEther(balance));
+        try {
+          const balance = await provider.getBalance(address);
+          setBalance(formatEther(balance));
+        } catch (err) {
+          console.error("Error updating balance:", err);
+          setBalance(null);
+        }
       }
     };
 
-    if (wallet?.provider) {
-      provider = new BrowserProvider(wallet.provider);
-      setEthersProvider(provider);
+    const setupWallet = async () => {
+      if (wallet?.provider && mounted) {
+        provider = new BrowserProvider(wallet.provider);
+        setEthersProvider(provider);
 
-      // Get initial wallet state
-      const initializeWallet = async () => {
-        const signer = await provider!.getSigner();
-        const addr = await signer.getAddress();
-        setAddress(addr);
+        try {
+          const signer = await provider.getSigner();
+          const addr = await signer.getAddress();
+          if (mounted) {
+            setAddress(addr);
 
-        const network = await provider!.getNetwork();
-        setChainId(Number(network.chainId));
+            const network = await provider.getNetwork();
+            setChainId(Number(network.chainId));
 
-        const bal = await provider!.getBalance(addr);
-        setBalance(formatEther(bal));
-      };
-
-      initializeWallet().catch(console.error);
-
-      // Setup event listeners
-      wallet.provider.on("accountsChanged", handleAccountsChanged);
-      wallet.provider.on("chainChanged", handleChainChanged);
-
-      // Cleanup function
-      return () => {
-        if (wallet?.provider) {
-          wallet.provider.removeListener(
-            "accountsChanged",
-            handleAccountsChanged
-          );
-          wallet.provider.removeListener("chainChanged", handleChainChanged);
+            const bal = await provider.getBalance(addr);
+            setBalance(formatEther(bal));
+          }
+        } catch (err) {
+          console.error("Error initializing wallet:", err);
+          if (mounted) {
+            resetStates();
+          }
         }
-      };
-    } else {
-      setEthersProvider(null);
-      setAddress(null);
-      setChainId(null);
-      setBalance(null);
-    }
-  }, [wallet]);
+
+        wallet.provider.on("accountsChanged", handleAccountsChanged);
+        wallet.provider.on("chainChanged", handleChainChanged);
+      }
+    };
+
+    setupWallet();
+
+    return () => {
+      mounted = false;
+      if (wallet?.provider) {
+        wallet.provider.removeListener(
+          "accountsChanged",
+          handleAccountsChanged
+        );
+        wallet.provider.removeListener("chainChanged", handleChainChanged);
+      }
+    };
+  }, [wallet, resetStates]);
+
+  const wrappedDisconnect = useCallback(
+    async (options: any) => {
+      try {
+        await disconnect(options);
+        resetStates();
+      } catch (error) {
+        console.error("Error during disconnect:", error);
+        resetStates();
+      }
+    },
+    [disconnect, resetStates]
+  );
 
   return {
     connect,
-    disconnect,
+    disconnect: wrappedDisconnect,
     connecting,
     wallet,
     address,
