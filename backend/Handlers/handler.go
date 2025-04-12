@@ -37,6 +37,13 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+type WalletConnection struct {
+	WalletAddress  string `json:"walletAddress"`
+	WalletNonce    string `json:"walletNonce"`
+	WalletVerified bool   `json:"walletVerified"`
+	jwt.RegisteredClaims
+}
+
 func (m *Repository) Login(w http.ResponseWriter, r *http.Request) {
 	var user RecievedData.User
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -160,6 +167,31 @@ func (m *Repository) ConnectWallet(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	Wallet := &WalletConnection{
+		WalletAddress:  wallet.Address,
+		WalletNonce:    "",
+		WalletVerified: true,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Wallet)
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_KEY")))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode("Error generating token")
+		fmt.Println("Error in signing token", err)
+		return
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     "walletToken",
+		Value:    tokenString,
+		Path:     "/",
+		Expires:  time.Now().Add(24 * time.Hour),
+		HttpOnly: false,
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+	})
 	w.WriteHeader(http.StatusOK)
 	//_, _ = w.Write([]byte("SUCCESSFUL"))
 	err = json.NewEncoder(w).Encode("Wallet Linked successfully")
@@ -168,4 +200,65 @@ func (m *Repository) ConnectWallet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+}
+
+func (m *Repository) SendProposal(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (m *Repository) AddJob(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value("userId").(string)
+	var job RecievedData.Job
+	err := json.NewDecoder(r.Body).Decode(&job)
+	job.ClientId = userId
+	//response:=make(map[string]interface{})
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Println("Error parsing job data", err)
+		//response=append()
+		err = json.NewEncoder(w).Encode("Error parsing job data")
+		if err != nil {
+			return
+		}
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode("Job added successfully")
+	if err != nil {
+		fmt.Println("Error encoding response:", err)
+		return
+	}
+}
+
+func (m *Repository) AddFreelancerDetails(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value("userId").(string)
+	var freelancerDetails RecievedData.FreelancerDetails
+	err := json.NewDecoder(r.Body).Decode(&freelancerDetails)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Println("Error parsing freelancer details data", err)
+		err = json.NewEncoder(w).Encode("Error parsing freelancer details data")
+		if err != nil {
+			fmt.Println("Error encoding response:", err)
+			return
+		}
+	}
+	freelancerDetails.FreelancerId = userId
+	err = m.DB.AddFreelancerDetails(freelancerDetails)
+	if err != nil {
+		fmt.Println("Error adding freelancer details to db", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		err = json.NewEncoder(w).Encode("Error adding freelancer details to db")
+		if err != nil {
+			fmt.Println("Error encoding response:", err)
+			return
+		}
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode("Freelancer details added successfully")
+	if err != nil {
+		fmt.Println("Error encoding response:", err)
+		return
+	}
 }

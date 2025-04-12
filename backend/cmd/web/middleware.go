@@ -86,7 +86,7 @@ func RoleMiddleware(requiredRole string) func(http.Handler) http.Handler {
 	}
 }
 
-func CheckWalletConnection(r *http.Request) (*WalletConnection, error) {
+func WalletTokenExtractor(r *http.Request) (*WalletConnection, error) {
 	cookie, err := r.Cookie("walletToken")
 	if errors.Is(err, http.ErrNoCookie) {
 		fmt.Println("No cookie found:", err)
@@ -95,7 +95,7 @@ func CheckWalletConnection(r *http.Request) (*WalletConnection, error) {
 		fmt.Println("Error checking cookie:", err)
 		return nil, err
 	}
-	token, err := jwt.ParseWithClaims(cookie.Value, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(cookie.Value, &WalletConnection{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
@@ -112,4 +112,17 @@ func CheckWalletConnection(r *http.Request) (*WalletConnection, error) {
 
 	return walletConn, nil
 
+}
+func CheckWalletConnection(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		walletConnection, err := WalletTokenExtractor(r)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			fmt.Println(err)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), "walletVerified", walletConnection.WalletVerified)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }

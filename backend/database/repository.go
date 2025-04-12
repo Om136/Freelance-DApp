@@ -7,4 +7,6 @@ type DbRepo interface {
 	Login(email, password string) (string, error)
 	GetRoleFromEmail(email string) (string, error)
 	StoreWalletAddress(userId, walletAddress string) error
+	CreateJob(job RecievedData.Job) error
+	AddFreelancerDetails(details RecievedData.FreelancerDetails) error
 }
