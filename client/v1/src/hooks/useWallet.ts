@@ -76,6 +76,29 @@ export const useWallet = () => {
 
             const bal = await provider.getBalance(addr);
             setBalance(formatEther(bal));
+            console.log({ walletAddress: addr});
+            try {
+              const response = await fetch(
+                "http://localhost:8080/user/walletSetup",
+                {
+                  method: "PUT",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                  },
+                  body: JSON.stringify({
+                    walletAddress: addr,
+                  }),
+                  credentials: "include",
+                }
+              );
+
+              if (!response.ok) {
+                throw new Error("Failed to update wallet address");
+              }
+            } catch (error) {
+              console.error("Error updating wallet address:", error);
+            }
           }
         } catch (err) {
           console.error("Error initializing wallet:", err);

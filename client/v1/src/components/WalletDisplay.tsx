@@ -17,15 +17,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Loader2,
-  ChevronDown,
-  Power,
-  ExternalLink,
-  Copy,
-  AlertCircle,
-} from "lucide-react";
-import { useCallback, useState } from "react";
+import { Loader2, ChevronDown, ExternalLink, Copy } from "lucide-react";
+import { useCallback, useState, useEffect } from "react";
 
 const NETWORK_NAMES: { [key: number]: string } = {
   1: "Ethereum Mainnet",
@@ -36,35 +29,19 @@ export function WalletDisplay() {
   const { connect, disconnect, connecting, address, balance, chainId, wallet } =
     useWallet();
   const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const handleDisconnectClick = () => {
-    setShowDisconnectDialog(true);
-  };
+  useEffect(() => {
+    // Check if user is authenticated by looking for token in localStorage
+    const token = localStorage.getItem("token");
+    setIsAuthenticated(!!token);
+  }, []);
 
-  const handleDialogClose = (open: boolean) => {
-    if (!open) {
-      setShowDisconnectDialog(false);
-    }
-  };
-
-  const handleCancelClick = () => {
-    setShowDisconnectDialog(false);
-  };
-
-  const handleConfirmDisconnect = async () => {
-    try {
-     await disconnect({ label: wallet?.label || "" });
-      setShowDisconnectDialog(false);
-    } catch (error) {
-      console.error("Error disconnecting wallet:", error);
-    }
-  };
-
-  const handleConnect = async () => {
+  const handleConnect = useCallback(async () => {
     if (!address) {
       await connect();
     }
-  };
+  }, [address, connect]);
 
   const copyAddress = useCallback(() => {
     if (address) {
@@ -79,6 +56,20 @@ export function WalletDisplay() {
       window.open(`${baseUrl}/address/${address}`, "_blank");
     }
   }, [address, chainId]);
+
+  const handleConfirmDisconnect = useCallback(async () => {
+    try {
+      await disconnect({ label: wallet?.label || "" });
+      setShowDisconnectDialog(false);
+    } catch (error) {
+      console.error("Error disconnecting wallet:", error);
+    }
+  }, [disconnect, wallet]);
+
+  // If user is not authenticated, don't show the wallet button
+  if (!isAuthenticated) {
+    return null;
+  }
 
   if (!address) {
     return (
