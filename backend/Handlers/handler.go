@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"os"
@@ -257,6 +258,30 @@ func (m *Repository) AddFreelancerDetails(w http.ResponseWriter, r *http.Request
 	}
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode("Freelancer details added successfully")
+	if err != nil {
+		fmt.Println("Error encoding response:", err)
+		return
+	}
+}
+
+func (m *Repository) GetJobByStatusForClient(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value("userId").(string)
+	status := chi.URLParam(r, "status")
+	//var jobs []SentData.JobData
+	jobs, err := m.DB.GetJobsForClientByStatus(userId, status)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println("Error getting jobs from database", err)
+		err = json.NewEncoder(w).Encode("Error getting jobs from database")
+		if err != nil {
+			fmt.Println("Error encoding response:", err)
+			return
+		}
+		return
+	}
+	response := make(map[string]interface{})
+	response["jobs"] = jobs
+	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		fmt.Println("Error encoding response:", err)
 		return

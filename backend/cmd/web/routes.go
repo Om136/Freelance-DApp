@@ -33,6 +33,7 @@ func routes() http.Handler {
 		mux.Route("/recruiter", func(mux chi.Router) {
 			mux.Use(CheckWalletConnection)
 			mux.With(RoleMiddleware("recruiter")).Post("/addJob", Handlers.Repo.AddJob)
+			mux.With(RoleMiddleware("recruiter")).Get("/jobs/{status}", Handlers.Repo.GetJobByStatusForClient)
 		})
 	})
 	return mux

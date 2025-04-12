@@ -2,6 +2,7 @@ package dbrepo
 
 import (
 	"Freelance-DApp-Backend/backend/models/RecievedData"
+	"Freelance-DApp-Backend/backend/models/SentData"
 	"context"
 	"database/sql"
 	"errors"
@@ -89,8 +90,8 @@ func (m *PostgresRepo) StoreWalletAddress(userId, walletAddress string) error {
 func (m *PostgresRepo) CreateJob(job RecievedData.Job) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
-	query := `INSERT INTO jobs(title,description,budget,status,clientId,created_at,tag) VALUES ($1,$2,$3,$4,$5,$6,$7);`
-	_, err := m.DB.ExecContext(ctx, query, job.Title, job.Description, job.Budget, "Pending", job.ClientId, time.Now(), job.Tag)
+	query := `INSERT INTO jobs(title,description,budget,status,clientId,created_at,tag) VALUES ($1,$2,$3,$4,$5,$6,(SELECT id from tags where name = $7));`
+	_, err := m.DB.ExecContext(ctx, query, job.Title, job.Description, job.Budget, "Open", job.ClientId, time.Now(), job.Tag)
 	if err != nil {
 		fmt.Println("Error inserting job:", err)
 		return err
@@ -126,4 +127,42 @@ func (m *PostgresRepo) AddFreelancerDetails(details RecievedData.FreelancerDetai
 		}
 	}
 	return tx.Commit()
+}
+
+//Ongoing, Open, Drafted, Disputed, Completed
+
+func (m *PostgresRepo) GetJobsForClientByStatus(userId, status string) ([]SentData.JobData, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	var rows *sql.Rows
+	var err error
+	query := `SELECT DISTINCT j.title,j.description,j.budget,j.status,j.created_at,j.status,t.name from jobs as j join tags as t on j.tag=t.id where freelancer_id = $1 and status = $2`
+	if status == "all" {
+		query = "SELECT DISTINCT j.title,j.description,j.budget,j.status,j.created_at,j.status,t.name from jobs as j join tags as t on j.tag=t.id where freelancer_id = $1"
+		rows, err = m.DB.QueryContext(ctx, query, userId)
+	} else {
+		rows, err = m.DB.QueryContext(ctx, query, userId, status)
+	}
+	if err != nil {
+		fmt.Println("Error getting jobs for client:", err)
+		return []SentData.JobData{}, err
+	}
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			fmt.Println("Error closing rows in getJobsById:", err)
+			return
+		}
+	}(rows)
+	var jobs []SentData.JobData
+	for rows.Next() {
+		var job SentData.JobData
+		err = rows.Scan(&job)
+		if err != nil {
+			fmt.Println("Error scanning jobs for client:", err)
+			return nil, err
+		}
+		jobs = append(jobs, job)
+	}
+	return jobs, nil
 }
