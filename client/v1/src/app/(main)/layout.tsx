@@ -8,7 +8,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const role="freelancer"; // This should be dynamically set based on user role
+  const role="recruiter"; // This should be dynamically set based on user role
   return (
     <html lang="en" suppressHydrationWarning>
       <body>

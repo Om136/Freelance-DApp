@@ -83,15 +83,14 @@ const AppSidebar = ({ userType = "freelancer", activePage = "" }) => {
         
         {isRecruiter ? (
           <SidebarGroup>
+            <Button variant="default" className="bg-emerald-500 hover:bg-emerald-600 w-full mb-2">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Post a Job
+                </Button>
             <SidebarGroupLabel>Recruiter Tools</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton isActive={activePage === "post-job"}>
-                    <PlusCircle className={activePage === "post-job" ? "text-emerald-500" : "text-zinc-400"} />
-                    <span>Post a Job</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                
                 <SidebarMenuItem>
                   <SidebarMenuButton isActive={activePage === "my-listings"}>
                     <BriefcaseBusiness className={activePage === "my-listings" ? "text-emerald-500" : "text-zinc-400"} />
@@ -103,6 +102,9 @@ const AppSidebar = ({ userType = "freelancer", activePage = "" }) => {
                     <User2 className={activePage === "applicants" ? "text-emerald-500" : "text-zinc-400"} />
                     <span>Applicants</span>
                   </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>

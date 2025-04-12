@@ -12,11 +12,7 @@ const Hero = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0F0F13]">
       <div className="h-screen w-screen">
-        <iframe
-          src="https://my.spline.design/unchained-8hUw5POSdcae7jhZkEFOeuIa/"
-          width="100%"
-          height="100%"
-        ></iframe>
+      <iframe src='https://my.spline.design/unchained-8hUw5POSdcae7jhZkEFOeuIa/'  frameborder='0' width='100%' height='100%'></iframe>
       </div>
 
       {/* Content */}
