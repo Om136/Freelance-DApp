@@ -39,14 +39,14 @@ import {
 // import AppSidebar from "@/components/AppSidebar"
 
 export default function PostJobPage() {
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [category, setCategory] = useState("")
-  const [minBudget, setMinBudget] = useState("")
-  const [maxBudget, setMaxBudget] = useState("")
-  const [duration, setDuration] = useState("")
-  const [skills, setSkills] = useState([])
-  const [newSkill, setNewSkill] = useState("")
+  const [title, setTitle] = useState<string>("")
+  const [description, setDescription] = useState<string>("")
+  const [category, setCategory] = useState<string>("")
+  const [budget, setbudget] = useState<string>("")
+  // const [maxBudget, setMaxBudget] = useState<string>("")
+  // const [duration, setDuration] = useState<string>("")
+  const [skills, setSkills] = useState<string[]>([])
+  const [newSkill, setNewSkill] = useState<string>("")
 
   const addSkill = () => {
     if (newSkill.trim() !== "" && !skills.includes(newSkill.trim())) {
@@ -55,24 +55,39 @@ export default function PostJobPage() {
     }
   }
 
-  const removeSkill = (skillToRemove) => {
+  const removeSkill = (skillToRemove: string) => {
     setSkills(skills.filter(skill => skill !== skillToRemove))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    // Here you would handle the form submission to your backend
-    console.log({
-      title,
-      description,
-      category,
-      budget: `$${minBudget} - $${maxBudget}`,
-      duration,
-      skills
-    })
     
-    // For demo purposes, we'll just show an alert
-    alert("Job posted successfully!")
+    try {
+      const response = await fetch('http://localhost:8080/user/recruiter/addJob', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          tags:category,
+          budget: Number(budget),
+          skills
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to post job');
+      }
+
+      const data = await response.json();
+      alert("Job posted successfully!");
+      // Optionally redirect or clear form
+    } catch (error) {
+      console.error('Error posting job:', error);
+      alert("Failed to post job. Please try again.");
+    }
   }
 
   return (
@@ -182,8 +197,8 @@ export default function PostJobPage() {
                           type="number"
                           placeholder="Min"
                           required
-                          value={minBudget}
-                          onChange={e => setMinBudget(e.target.value)}
+                          value={budget}
+                          onChange={e => setbudget(e.target.value)}
                           className="pl-9 border-zinc-800 bg-zinc-900 focus-visible:ring-emerald-500/50"
                         />
                       </div>
