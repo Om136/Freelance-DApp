@@ -1,5 +1,7 @@
 package SentData
 
+import "time"
+
 type WalletVerifyRequest struct {
 	UserID    int    `json:"user_id"`
 	Signature string `json:"signature"`
@@ -7,14 +9,24 @@ type WalletVerifyRequest struct {
 }
 
 type JobData struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Budget      int    `json:"budget"`
-	Status      string `json:"status"`
-	CreatedAt   string `json:"created_at"`
-	Tag         string `json:"tag"`
+	Title       string         `json:"title"`
+	Description string         `json:"description"`
+	Budget      int            `json:"budget"`
+	Status      string         `json:"status"`
+	CreatedAt   string         `json:"created_at"`
+	Tag         string         `json:"tag"`
+	Proposals   []ProposalData `json:"proposals"`
 }
 
+type ProposalData struct {
+	//ID             string
+	FreelancerID   string    `json:"freelancer_id"`
+	CoverLetter    []byte    `json:"cover_letter"`
+	ProposedBudget int       `json:"proposed_budget"`
+	Status         string    `json:"status"`
+	CreatedAt      time.Time `json:"created_at"`
+	Filename       string    `json:"filename"`
+}
 type FreelancerDetails struct {
 	Name        string  `json:"name"`
 	Description string  `json:"description"`
