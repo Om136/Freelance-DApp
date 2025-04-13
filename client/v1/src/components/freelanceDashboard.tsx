@@ -1,25 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowUpDown,
   BriefcaseBusiness,
   ChevronDown,
   Clock,
-  Code2,
-  CreditCard,
   DollarSign,
   Filter,
   Globe,
-  Layers,
-  MessageSquare,
   Search,
-  Star,
   User2,
 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,104 +33,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Sample job data
-const jobs = [
-  {
-    id: "job-1",
-    title: "Full Stack Web3 Developer",
-    description:
-      "Looking for an experienced developer to build a DeFi dashboard with wallet integration and real-time data visualization.",
-    budget: "$3,000 - $5,000",
-    duration: "2-3 weeks",
-    skills: ["React", "Solidity", "Web3.js", "Node.js"],
-    client: {
-      name: "CryptoVentures",
-      rating: 4.8,
-      jobs: 12,
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    postedDate: "2 days ago",
-    proposals: 8,
-    category: "Development",
-    status: "active",
-  },
-  {
-    id: "job-2",
-    title: "Smart Contract Auditor",
-    description:
-      "Need a security expert to audit our NFT marketplace smart contracts before mainnet deployment.",
-    budget: "$2,500 - $4,000",
-    duration: "1-2 weeks",
-    skills: ["Solidity", "Security", "Auditing", "ERC-721"],
-    client: {
-      name: "NFT Collective",
-      rating: 4.6,
-      jobs: 5,
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    postedDate: "5 days ago",
-    proposals: 12,
-    category: "Security",
-    status: "active",
-  },
-  {
-    id: "job-3",
-    title: "Blockchain UI/UX Designer",
-    description:
-      "Design a modern, intuitive interface for our decentralized exchange platform with focus on user experience.",
-    budget: "$1,800 - $3,200",
-    duration: "2 weeks",
-    skills: ["UI/UX", "Figma", "Web3", "Design Systems"],
-    client: {
-      name: "DeFi Labs",
-      rating: 4.9,
-      jobs: 8,
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    postedDate: "1 week ago",
-    proposals: 15,
-    category: "Design",
-    status: "active",
-  },
-  {
-    id: "job-4",
-    title: "Tokenomics Consultant",
-    description:
-      "Seeking an expert to design and document our project's tokenomics model and distribution strategy.",
-    budget: "$4,000 - $6,000",
-    duration: "3-4 weeks",
-    skills: ["Tokenomics", "Economics", "Crypto", "Whitepaper"],
-    client: {
-      name: "Token Innovations",
-      rating: 4.7,
-      jobs: 3,
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    postedDate: "3 days ago",
-    proposals: 6,
-    category: "Consulting",
-    status: "active",
-  },
-  {
-    id: "job-5",
-    title: "Solidity Developer for DeFi Protocol",
-    description:
-      "Implement a yield farming protocol with multiple pools and reward mechanisms on Ethereum.",
-    budget: "$5,000 - $8,000",
-    duration: "1 month",
-    skills: ["Solidity", "DeFi", "Yield Farming", "ERC-20"],
-    client: {
-      name: "Yield Protocol",
-      rating: 4.5,
-      jobs: 7,
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    postedDate: "1 day ago",
-    proposals: 10,
-    category: "Development",
-    status: "active",
-  },
-];
+interface Job {
+  id: string; // Added id property
+  title: string;
+  description: string;
+  budget: number;
+  status: string;
+  created_at: string;
+  tag: string;
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -144,18 +49,68 @@ export default function DashboardPage() {
     router.push("/profile-set");
   };
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [jobs, setJobs] = useState<Job[]>([
+    {
+      id: "1", // Added unique id
+      title: "Sample Job",
+      description: "This is a sample job description.",
+      budget: 1000,
+      status: "open",
+      created_at: new Date().toISOString(),
+      tag: "Development",
+    },
+    {
+      id: "2",
+      title: "UI/UX Designer",
+      description: "Design a user-friendly interface for a mobile app.",
+      budget: 2000,
+      status: "open",
+      created_at: new Date().toISOString(),
+      tag: "Design",
+    },
+    {
+      id: "3",
+      title: "Blockchain Security Auditor",
+      description: "Audit smart contracts for vulnerabilities.",
+      budget: 3000,
+      status: "open",
+      created_at: new Date().toISOString(),
+      tag: "Security",
+    },
+    {
+      id: "4",
+      title: "Crypto Consultant",
+      description: "Provide insights on tokenomics and market strategies.",
+      budget: 1500,
+      status: "open",
+      created_at: new Date().toISOString(),
+      tag: "Consulting",
+    },
+  ]);
+  const [selectedTag, setSelectedTag] = useState("all");
+
+  useEffect(() => {
+    async function fetchJobs() {
+      try {
+        const response = await fetch("/api/jobs"); // Replace with your API endpoint
+        const data = await response.json();
+        setJobs(data);
+      } catch (error) {
+        console.error("Failed to fetch jobs:", error);
+      }
+    }
+    fetchJobs();
+  }, []);
 
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch =
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesCategory =
-      selectedCategory === "all" ||
-      job.category.toLowerCase() === selectedCategory.toLowerCase();
+    const matchesTag =
+      selectedTag === "all" || job.tag.toLowerCase() === selectedTag.toLowerCase();
 
-    return matchesSearch && matchesCategory;
+    return matchesSearch && matchesTag;
   });
 
   return (
@@ -183,7 +138,6 @@ export default function DashboardPage() {
               />
             </div>
             <Button
-              onClick={handleClick}
               variant="outline"
               size="sm"
               className="gap-2 rounded-full border-zinc-800 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
@@ -199,7 +153,7 @@ export default function DashboardPage() {
             <Tabs
               defaultValue="all"
               className="w-full sm:w-auto"
-              onValueChange={setSelectedCategory}
+              onValueChange={setSelectedTag}
             >
               <TabsList className="bg-zinc-900">
                 <TabsTrigger value="all">All Jobs</TabsTrigger>
@@ -211,6 +165,15 @@ export default function DashboardPage() {
             </Tabs>
 
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-zinc-800 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                onClick={handleClick}
+              >
+                <User2 className="h-4 w-4" />
+                <span>Edit Profile</span>
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -252,72 +215,38 @@ export default function DashboardPage() {
                     <div className="flex items-start justify-between">
                       <div>
                         <Badge className="mb-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20">
-                          {job.category}
+                          {job.tag}
                         </Badge>
                         <h3 className="text-lg font-semibold leading-tight group-hover:text-emerald-400">
                           {job.title}
                         </h3>
                       </div>
-                      <Badge
-                        variant="outline"
-                        className="border-zinc-700 bg-zinc-800 text-zinc-400"
-                      >
-                        {job.proposals} proposals
-                      </Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="pb-4">
                     <p className="mb-4 line-clamp-2 text-sm text-zinc-400">
                       {job.description}
                     </p>
-                    <div className="mb-4 flex flex-wrap gap-1">
-                      {job.skills.map((skill) => (
-                        <Badge
-                          key={skill}
-                          variant="secondary"
-                          className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-                        >
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="flex items-center gap-1 text-zinc-400">
                         <DollarSign className="h-4 w-4 text-emerald-500" />
-                        <span>{job.budget}</span>
+                        <span>${job.budget}</span>
                       </div>
                       <div className="flex items-center gap-1 text-zinc-400">
                         <Clock className="h-4 w-4 text-emerald-500" />
-                        <span>{job.duration}</span>
+                        <span>{new Date(job.created_at).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </CardContent>
                   <Separator className="bg-zinc-800" />
                   <CardFooter className="pt-4">
                     <div className="flex w-full items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Image
-                          src={job.client.avatar || "/placeholder.svg"}
-                          alt={job.client.name}
-                          width={28}
-                          height={28}
-                          className="rounded-full border border-zinc-700"
-                        />
-                        <div>
-                          <p className="text-xs font-medium">
-                            {job.client.name}
-                          </p>
-                          <div className="flex items-center gap-1">
-                            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                            <span className="text-xs text-zinc-400">
-                              {job.client.rating} ({job.client.jobs} jobs)
-                            </span>
-                          </div>
-                        </div>
+                      <div>
+                        <p className="text-xs font-medium">Unknown Client</p>
                       </div>
                       <div className="flex items-center gap-1 text-xs text-zinc-500">
                         <Globe className="h-3 w-3" />
-                        <span>{job.postedDate}</span>
+                        <span>{job.status}</span>
                       </div>
                     </div>
                   </CardFooter>
@@ -331,7 +260,7 @@ export default function DashboardPage() {
               <BriefcaseBusiness className="mb-4 h-12 w-12 text-zinc-700" />
               <h3 className="mb-2 text-xl font-medium">No jobs found</h3>
               <p className="mb-6 text-zinc-400">
-                Try adjusting your search or filters to find what you're looking
+                Try adjusting your search or filters to find what you&apos;re looking
                 for.
               </p>
               <Button
@@ -339,7 +268,7 @@ export default function DashboardPage() {
                 className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
                 onClick={() => {
                   setSearchQuery("");
-                  setSelectedCategory("all");
+                  setSelectedTag("all");
                 }}
               >
                 Clear filters
