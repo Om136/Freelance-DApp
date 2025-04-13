@@ -10,7 +10,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     // const userRole = localStorage.getItem("role");
-    setRole("client"); // This should be dynamically set based on user role
+    setRole("freelancer"); // This should be dynamically set based on user role
     setLoading(false);
   }, []);
 
