@@ -62,13 +62,13 @@ export default function PostedJobsPage() {
     // Simulate API call with mock data
     const fetchJobs = async () => {
       try {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setJobs(mockJobs);
-      } catch (err) {
-        setError('Failed to fetch jobs');
+        const response = await fetch('http://localhost:8080/user/recruiter/jobs/All')
+        const data = await response.json()
+        setJobs(data)
+      } catch (error) {
+        console.error('Error fetching ongoing jobs:', error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
 
@@ -133,7 +133,7 @@ export default function PostedJobsPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-between">
-                  <div className="flex gap-2">
+                  {/* <div className="flex gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -151,7 +151,7 @@ export default function PostedJobsPage() {
                         <Edit className="h-4 w-4" />
                       </Button>
                     </Link>
-                  </div>
+                  </div> */}
                   <Link href={`/postedjobs/${job.id}`}>
                     <Button 
                       variant="default" 

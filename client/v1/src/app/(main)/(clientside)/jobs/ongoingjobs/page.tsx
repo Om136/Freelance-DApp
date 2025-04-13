@@ -25,45 +25,17 @@ export default function OngoingJobsPage() {
   const [jobs, setJobs] = useState<OngoingJob[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Mock data for ongoing jobs
-  const mockJobs: OngoingJob[] = [
-    {
-      id: "1",
-      title: "NFT Marketplace Development",
-      freelancer: "John Doe",
-      startDate: "2024-01-10",
-      deadline: "2024-02-10",
-      budget: 5000,
-      progress: 75,
-      status: "In Progress"
-    },
-    {
-      id: "2",
-      title: "Smart Contract Integration",
-      freelancer: "Jane Smith",
-      startDate: "2024-01-15",
-      deadline: "2024-02-15",
-      budget: 3000,
-      progress: 40,
-      status: "Under Review"
-    },
-    {
-      id: "3",
-      title: "DeFi Dashboard Design",
-      freelancer: "Mike Johnson",
-      startDate: "2024-01-20",
-      deadline: "2024-02-05",
-      budget: 2000,
-      progress: 90,
-      status: "Revision"
-    }
-  ]
-
   useEffect(() => {
     const fetchJobs = async () => {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setJobs(mockJobs)
-      setLoading(false)
+      try {
+        const response = await fetch('http://localhost:8080/user/recruiter/jobs/ongoing')
+        const data = await response.json()
+        setJobs(data)
+      } catch (error) {
+        console.error('Error fetching ongoing jobs:', error)
+      } finally {
+        setLoading(false)
+      }
     }
     fetchJobs()
   }, [])

@@ -69,6 +69,8 @@ export default function AuthPage() {
       if (!response.ok) {
         throw new Error(data.message || 'Login failed')
       }
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('role', JSON.stringify(data.role))
 
       // Handle successful login
       window.location.href = "/dashboard"

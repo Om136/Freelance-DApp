@@ -347,13 +347,24 @@ func (m *Repository) GetFreelancerDetailsForClient(w http.ResponseWriter, r *htt
 }
 
 func (m *Repository) GetOpenJobDetailsById(w http.ResponseWriter, r *http.Request) {
+	jobId := chi.URLParam(r, "id")
 
 }
 
 func (m *Repository) ApplyForJob(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value("userId").(string)
 	jobId := chi.URLParam(r, "id")
-	r.ParseMultipartForm(10 << 20)
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Println("pdf size > 10", err)
+		err := json.NewEncoder(w).Encode("PDF size > 10")
+		if err != nil {
+			fmt.Println("Error encoding response:", err)
+			return
+		}
+		return
+	}
 
 	file, handler, err := r.FormFile("cv")
 	if err != nil {
@@ -393,4 +404,25 @@ func (m *Repository) ApplyForJob(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error adding application to db", err)
 		return
 	}
+}
+
+func (m *Repository) GetJobsForFreelancer(w http.ResponseWriter, r *http.Request) {
+	jobs, err := m.DB.GetAllJobsForFreelancer()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println("Error getting jobs from database", err)
+		err = json.NewEncoder(w).Encode("Error getting jobs from database")
+		return
+	}
+	response := make(map[string]interface{})
+	response["jobs"] = jobs
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		fmt.Println("Error encoding response:", err)
+		return
+	}
+}
+
+func (m *Repository) EditDetails(w http.ResponseWriter, r *http.Request) {
+
 }

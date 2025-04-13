@@ -15,4 +15,5 @@ type DbRepo interface {
 	GetJobsForClientByStatus(userId, status string) ([]SentData.JobData, error)
 	GetFreelanceDetailsForClient() ([]SentData.FreelancerDetails, error)
 	ApplyForJobById(jobId, userId, filename string, cv []byte, budget int) error
+	GetAllJobsForFreelancer() ([]SentData.JobData, error)
 }
